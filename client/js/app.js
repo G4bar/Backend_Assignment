@@ -1,6 +1,7 @@
 // Main JavaScript file for the Polling Application
 
 // API base URL
+// NOTE FOR RAILWAY DEPLOYMENT: Update this URL to match your backend API endpoint
 const API_BASE_URL = 'https://polls-api-production.up.railway.app';
 
 // DOM Elements

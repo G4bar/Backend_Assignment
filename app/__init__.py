@@ -21,12 +21,11 @@ def create_app(env=None):
         app.config['DEBUG'] = False
     
     # Configure CORS to allow frontend requests
+    # NOTE FOR RAILWAY DEPLOYMENT: Update these origins to match your frontend URL
     CORS(app, resources={
         r"/*": {
             "origins": [
                 "https://polling-app-production-1019.up.railway.app",  # Production frontend
-                "http://localhost:3000",  # Local development frontend (if needed)
-                "http://127.0.0.1:3000"   # Alternative local address
             ],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
@@ -46,5 +45,7 @@ def create_app(env=None):
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(polls_bp, url_prefix='/polls')
     app.register_blueprint(general_bp)  # Register it at the root level (no prefix)
+    
+    return app
     
     return app

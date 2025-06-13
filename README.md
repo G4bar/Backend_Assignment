@@ -33,6 +33,34 @@ This application is configured for deployment on Railway.
    - `DATABASE_URL`: Your database connection string
    - `ADMIN_SECRET`: Secret key for admin user creation
 
+**Important customization for your deployment:**
+
+When deploying your own instance of this application on Railway, you'll need to make the following changes:
+
+1. **Update API endpoint in the client application:**
+   - Open `client/js/app.js`
+   - Locate the `API_BASE_URL` constant at the top of the file
+   - Change it to point to your own deployed backend URL:
+   ```javascript
+   // Replace this with your own Railway backend URL
+   const API_BASE_URL = 'https://your-backend-app-name.up.railway.app';
+   ```
+
+2. **Update CORS settings in the backend:**
+   - Open `app/__init__.py` 
+   - Find the CORS configuration section
+   - Update the "origins" list to include your frontend application URL:
+   ```python
+   CORS(app, resources={
+       r"/*": {
+           "origins": [
+               "https://your-frontend-app-name.up.railway.app",  # Your production frontend
+           ],
+           # ...existing configuration...
+       }
+   })
+   ```
+
 The application will automatically deploy when you push changes to your repository.
 
 ## Local Development
@@ -287,4 +315,5 @@ Most endpoints require authentication. To authenticate:
 
 ## Error Handling
 
+All errors return a JSON object with a `msg` field describing the error.
 All errors return a JSON object with a `msg` field describing the error.
