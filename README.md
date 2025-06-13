@@ -8,6 +8,7 @@ Progettazione e Produzione Multimediale - Multimedia Design and Production 2024/
 
 ![Built with Flask](https://img.shields.io/badge/Built%20with-Flask-000000?logo=flask)
 ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)
+![Environment](https://img.shields.io/badge/environment-development-orange)
 
 A RESTful API for creating and managing polls. Users can register, create polls with multiple options, vote on polls, and view poll results.
 
@@ -18,7 +19,6 @@ A RESTful API for creating and managing polls. Users can register, create polls 
 3. Configure environment variables:
    - Copy `.env.example` to `.env`: `cp .env.example .env`
    - Edit `.env` with your secure settings
-   - For production, generate strong secret keys!
 4. Run the application: `python run.py`
 
 The API will be available at `http://localhost:5000/`
