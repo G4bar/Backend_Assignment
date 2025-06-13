@@ -1,7 +1,7 @@
 // Main JavaScript file for the Polling Application
 
 // API base URL
-const API_BASE_URL = 'http://polls-api-production.up.railway.app';
+const API_BASE_URL = 'https://polls-api-production.up.railway.app';
 
 // DOM Elements
 const pollsContainer = document.getElementById('polls-container');
