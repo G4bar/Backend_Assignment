@@ -24,14 +24,24 @@ A RESTful API for creating and managing polls. Users can register, create polls 
 
 ### Railway Deployment
 
-This application is configured for deployment on Railway.
+This application is configured for deployment on Railway using two separate services:
 
+#### 1. API Backend Deployment
 1. Connect your GitHub repository to Railway
-2. Railway will automatically detect the configuration in `railway.json` and deploy the application
+2. Railway will automatically detect the configuration in `railway.json` and deploy the backend application
 3. Set up the required environment variables in Railway project settings:
    - `SECRET_KEY`: For JWT and application security
    - `DATABASE_URL`: Your database connection string
    - `ADMIN_SECRET`: Secret key for admin user creation
+
+#### 2. Client Application Deployment
+To deploy the client application, you need to create a separate Railway service:
+
+1. In your Railway project, add a new service
+2. Connect to the same GitHub repository
+3. Configure the service with the following settings:
+   - Root Directory: `client/` 
+4. This will deploy the client application as a separate service with its own URL
 
 **Important customization for your deployment:**
 
