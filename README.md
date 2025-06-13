@@ -11,17 +11,23 @@ Progettazione e Produzione Multimediale - Multimedia Design and Production 2024/
 
 A RESTful API for creating and managing polls. Users can register, create polls with multiple options, vote on polls, and view poll results.
 
-## Setup
+### Railway Deployment
 
-1. Clone the repository
-2. Install dependencies: `pip install -r requirements.txt`
-3. Configure environment variables:
-   - Copy `.env.example` to `.env`: `cp .env.example .env`
-   - Edit `.env` with your secure settings
-   - For production, generate strong secret keys!
-4. Run the application: `python run.py`
+This application is configured for deployment on Railway.
 
-The API will be available at `http://localhost:5000/`
+1. Fork or clone this repository
+2. Connect your GitHub repository to Railway
+3. Railway will automatically detect the configuration in `railway.json` and deploy the application
+4. Set up the required environment variables in Railway project settings:
+   - `SECRET_KEY`: For JWT and application security
+   - `DATABASE_URL`: Your database connection string
+   - `ADMIN_SECRET`: Secret key for admin user creation
+
+The application will automatically deploy when you push changes to your repository.
+
+## Local Development
+
+To run the application locally, please checkout the **DEV** branch which contains the necessary configuration for local development:
 
 ## API Documentation
 
