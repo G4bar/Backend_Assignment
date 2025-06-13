@@ -4,6 +4,12 @@ Progettazione e Produzione Multimediale - Multimedia Design and Production 2024/
 **Autore**: Gabriele Berti  
 **Matricola**: 7073786
 
+**API URL:**: https://polls-api-production.up.railway.app
+**CLIENT URL:**: https://polling-app-production-3be4.up.railway.app/index.html
+
+## Client Application
+The client is a completely static web application built with HTML, CSS, and JavaScript. It is hosted separately from the backend and communicates with the Flask API exclusively through RESTful endpoints. The client handles user authentication, poll creation, voting, and result visualization entirely on the frontend, making API calls as needed to persist and retrieve data.
+
 # Polling application API
 
 ![Built with Flask](https://img.shields.io/badge/Built%20with-Flask-000000?logo=flask)
