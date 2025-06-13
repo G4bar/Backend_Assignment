@@ -1,0 +1,10 @@
+{
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "python run.py",
+    "healthcheckPath": "/",
+    "healthcheckTimeout": 60
+  }
+}
