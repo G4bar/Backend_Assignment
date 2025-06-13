@@ -188,6 +188,7 @@ def get_my_polls():
         })
     
     return jsonify({
+        'user_id': user_id,
         'polls': polls_list,
         'count': len(polls_list)
     }), 200

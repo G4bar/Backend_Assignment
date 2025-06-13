@@ -197,6 +197,7 @@ The API will be available at `http://localhost:5000/`
 - **Success Response**: `200 OK`
   ```json
   {
+    "user_id": 1,
     "polls": [
       {
         "id": 1,
