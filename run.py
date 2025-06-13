@@ -1,8 +1,10 @@
+# Keep this file for local development purposes
 import os
 from app import create_app, db
 
-# Use environment variable for environment setting
-env = os.environ.get('FLASK_ENV', 'production')
+# This file is for local development only
+# It's not used in production where Gunicorn uses wsgi.py instead
+env = 'development'  # Always use development for local runs
 app = create_app(env)
 
 with app.app_context():
@@ -10,4 +12,4 @@ with app.app_context():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)

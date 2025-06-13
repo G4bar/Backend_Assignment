@@ -9,11 +9,15 @@ db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
 
-def create_app():
+def create_app(env=None):
     app = Flask(__name__)
     
     # Use Config class for configuration
     app.config.from_object(Config)
+    
+    # Ensure debug is disabled in production
+    if env == 'production':
+        app.config['DEBUG'] = False
     
     # Initialize extensions with app
     db.init_app(app)
