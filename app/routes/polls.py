@@ -123,3 +123,71 @@ def vote_on_poll():
     except Exception as e:
         db.session.rollback()
         return jsonify({"msg": "Error recording vote", "error": str(e)}), 500
+
+@polls_bp.route('/', methods=['GET'])
+def get_all_polls():
+    polls = Poll.query.all()
+    
+    polls_list = []
+    for poll in polls:
+        polls_list.append({
+            'id': poll.id,
+            'title': poll.title,
+            'description': poll.description
+        })
+    
+    return jsonify({
+        'polls': polls_list,
+        'count': len(polls_list)
+    }), 200
+
+@polls_bp.route('/delete/<int:poll_id>', methods=['DELETE'])
+@jwt_required()
+def delete_poll(poll_id):
+    # Get authenticated user ID
+    user_id = get_jwt_identity()
+    if isinstance(user_id, str):
+        user_id = int(user_id)
+    
+    # Check if poll exists
+    poll = Poll.query.get(poll_id)
+    if not poll:
+        return jsonify({"msg": "Poll not found"}), 404
+    
+    # Check if authenticated user is the poll owner
+    if poll.user_id != user_id:
+        return jsonify({"msg": "You don't have permission to delete this poll"}), 403
+    
+    # Delete poll (cascade will handle related options and votes)
+    db.session.delete(poll)
+    
+    try:
+        db.session.commit()
+        return jsonify({"msg": "Poll deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error deleting poll", "error": str(e)}), 500
+
+@polls_bp.route('/my-polls', methods=['GET'])
+@jwt_required()
+def get_my_polls():
+    # Get authenticated user ID
+    user_id = get_jwt_identity()
+    if isinstance(user_id, str):
+        user_id = int(user_id)
+    
+    # Query polls created by the authenticated user
+    polls = Poll.query.filter_by(user_id=user_id).all()
+    
+    polls_list = []
+    for poll in polls:
+        polls_list.append({
+            'id': poll.id,
+            'title': poll.title,
+            'description': poll.description
+        })
+    
+    return jsonify({
+        'polls': polls_list,
+        'count': len(polls_list)
+    }), 200
