@@ -15,10 +15,9 @@ A RESTful API for creating and managing polls. Users can register, create polls 
 
 This application is configured for deployment on Railway.
 
-1. Fork or clone this repository
-2. Connect your GitHub repository to Railway
-3. Railway will automatically detect the configuration in `railway.json` and deploy the application
-4. Set up the required environment variables in Railway project settings:
+1. Connect your GitHub repository to Railway
+2. Railway will automatically detect the configuration in `railway.json` and deploy the application
+3. Set up the required environment variables in Railway project settings:
    - `SECRET_KEY`: For JWT and application security
    - `DATABASE_URL`: Your database connection string
    - `ADMIN_SECRET`: Secret key for admin user creation

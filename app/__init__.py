@@ -27,7 +27,10 @@ def create_app(env=None):
     # Register blueprints
     from .routes.auth import auth_bp
     from .routes.polls import polls_bp
+    from .routes.general import general_bp  # Import the new general blueprint
+    
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(polls_bp, url_prefix='/polls')
+    app.register_blueprint(general_bp)  # Register it at the root level (no prefix)
     
     return app

@@ -5,7 +5,7 @@
   "deploy": {
     "startCommand": "gunicorn --workers 4 --bind 0.0.0.0:$PORT wsgi:app",
     "healthcheckPath": "/",
-    "healthcheckTimeout": 100,
+    "healthcheckTimeout": 60,
     "restartPolicyType": "ON_FAILURE"
   }
 }
