@@ -1,4 +1,10 @@
-# Polling API
+# Polling application API
+
+## Backend Assignment
+Progettazione e Produzione Multimediale - Multimedia Design and Production 2024/2025
+
+**Autore**: Gabriele Berti  
+**Matricola**: 7073786
 
 A RESTful API for creating and managing polls. Users can register, create polls with multiple options, vote on polls, and view poll results.
 
@@ -6,7 +12,11 @@ A RESTful API for creating and managing polls. Users can register, create polls 
 
 1. Clone the repository
 2. Install dependencies: `pip install -r requirements.txt`
-3. Run the application: `python run.py`
+3. Configure environment variables:
+   - Copy `.env.example` to `.env`: `cp .env.example .env`
+   - Edit `.env` with your secure settings
+   - For production, generate strong secret keys (see below)
+4. Run the application: `python run.py`
 
 The API will be available at `http://localhost:5000/`
 
