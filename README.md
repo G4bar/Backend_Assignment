@@ -20,6 +20,8 @@ A RESTful API for creating and managing polls. Users can register, create polls 
    - Copy `.env.example` to `.env`: `cp .env.example .env`
    - Edit `.env` with your secure settings
 4. Run the application: `python run.py`
+5. The client is already configured to connect to localhost
+6. For the client, we recommend using the Live Server extension if you're using Visual Studio Code
 
 The API will be available at `http://localhost:5000/`
 
