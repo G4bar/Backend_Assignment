@@ -177,12 +177,28 @@ function displayPollDetails(poll) {
     document.querySelectorAll('.poll-option').forEach(option => {
         option.addEventListener('click', async () => {
             if (!localStorage.getItem('token')) {
-                alert('Please login to vote');
+                showMessage('Login Required', 
+                    `<i class="bi bi-exclamation-circle text-warning"></i> 
+                    You need to be logged in to vote on this poll.
+                    <div class="mt-3">
+                        <button class="btn btn-primary" id="login-to-vote-btn">Login Now</button>
+                    </div>`, 
+                    'warning');
+                    
+                document.getElementById('login-to-vote-btn').addEventListener('click', () => {
+                    document.getElementById('messageModal').addEventListener('hidden.bs.modal', () => {
+                        document.getElementById('login-btn').click();
+                    }, { once: true });
+                    bootstrap.Modal.getInstance(document.getElementById('messageModal')).hide();
+                });
                 return;
             }
             
             if (userVoted) {
-                alert('You have already voted on this poll');
+                showMessage('Already Voted', 
+                    `<i class="bi bi-info-circle text-info"></i> 
+                    You have already voted on this poll.`, 
+                    'info');
                 return;
             }
             
@@ -205,9 +221,17 @@ function displayPollDetails(poll) {
                 
                 userVoted = true;
                 fetchPollDetails();
-                displayResults(poll);
+                
+                // Show success message
+                showMessage('Vote Recorded', 
+                    `<i class="bi bi-check-circle text-success"></i> 
+                    Your vote has been recorded successfully.`, 
+                    'success');
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                showMessage('Error', 
+                    `<i class="bi bi-x-circle text-danger"></i> 
+                    ${error.message}`, 
+                    'error');
             }
         });
     });
@@ -277,11 +301,16 @@ function displayResults(poll) {
 if (deletePollBtn) {
     deletePollBtn.addEventListener('click', async () => {
         const isAdmin = isUserAdmin();
-        const confirmMessage = isAdmin ? 
-            'Are you sure you want to delete this poll? You are doing this as an ADMIN.' : 
-            'Are you sure you want to delete this poll?';
-            
-        if (confirm(confirmMessage)) {
+        
+        const confirmTitle = isAdmin ? 'Admin Delete Poll' : 'Delete Poll';
+        const confirmContent = isAdmin ? 
+            `<div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> You are deleting this poll as an <strong>ADMIN</strong>.
+            </div>
+            <p>Are you sure you want to delete this poll?</p>` : 
+            `<p>Are you sure you want to delete this poll?</p>`;
+        
+        showConfirmation(confirmTitle, confirmContent, async () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/polls/delete/${pollId}`, {
                     method: 'DELETE',
@@ -296,12 +325,67 @@ if (deletePollBtn) {
                     throw new Error(data.msg || 'Failed to delete poll');
                 }
                 
-                alert('Poll deleted successfully');
-                window.location.href = 'index.html';
+                showMessage('Success', 
+                    `<i class="bi bi-check-circle text-success"></i> 
+                    Poll deleted successfully.
+                    <div class="mt-3">
+                        <a href="index.html" class="btn btn-primary">Return to Home</a>
+                    </div>`, 
+                    'success');
+                
+                document.getElementById('messageModal').addEventListener('hidden.bs.modal', () => {
+                    window.location.href = 'index.html';
+                }, { once: true });
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                showMessage('Error', 
+                    `<i class="bi bi-x-circle text-danger"></i> 
+                    ${error.message}`, 
+                    'error');
             }
-        }
+        });
+    });
+}
+
+// Share poll functionality
+const sharePollBtn = document.getElementById('share-poll-btn');
+const shareLinkModal = new bootstrap.Modal(document.getElementById('shareLinkModal'));
+const shareLinkInput = document.getElementById('share-link-input');
+const copyLinkBtn = document.getElementById('copy-link-btn');
+const copyConfirmation = document.getElementById('copy-confirmation');
+
+if (sharePollBtn) {
+    sharePollBtn.addEventListener('click', () => {
+        // Generate the shareable link - current URL
+        const pollUrl = window.location.href;
+        
+        // Set the link in the input field
+        shareLinkInput.value = pollUrl;
+        
+        // Reset copy confirmation
+        copyConfirmation.classList.add('d-none');
+        
+        // Show the modal
+        shareLinkModal.show();
+    });
+}
+
+if (copyLinkBtn) {
+    copyLinkBtn.addEventListener('click', () => {
+        // Select the text in the input
+        shareLinkInput.select();
+        shareLinkInput.setSelectionRange(0, 99999); // For mobile devices
+        
+        // Copy the text to clipboard
+        document.execCommand('copy');
+        
+        // Show confirmation
+        copyConfirmation.classList.remove('d-none');
+        copyConfirmation.innerHTML = '<i class="bi bi-check-circle"></i> Link copied to clipboard!';
+        
+        // Hide confirmation after 3 seconds
+        setTimeout(() => {
+            copyConfirmation.classList.add('d-none');
+        }, 3000);
     });
 }
 
@@ -322,6 +406,101 @@ function getUserIdFromToken(token) {
         console.error('Error decoding token:', error);
         return null;
     }
+}
+
+// Show message modal with custom content (copied from app.js for consistency)
+function showMessage(title, content, type = 'info') {
+    // First check if the modal exists, if not, create it
+    if (!document.getElementById('messageModal')) {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal fade';
+        modalDiv.id = 'messageModal';
+        modalDiv.tabIndex = '-1';
+        modalDiv.setAttribute('aria-hidden', 'true');
+        
+        modalDiv.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="messageModalTitle">Message</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="messageModalBody">
+                        <!-- Message content will be placed here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modalDiv);
+    }
+    
+    const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+    const modalTitle = document.getElementById('messageModalTitle');
+    const modalBody = document.getElementById('messageModalBody');
+    
+    modalTitle.textContent = title;
+    
+    // Add color indication based on message type
+    modalTitle.className = '';
+    if (type === 'success') modalTitle.classList.add('text-success');
+    if (type === 'error') modalTitle.classList.add('text-danger');
+    if (type === 'warning') modalTitle.classList.add('text-warning');
+    
+    modalBody.innerHTML = content;
+    
+    messageModal.show();
+    
+    return messageModal;
+}
+
+// Show confirmation dialog with custom action on confirm
+function showConfirmation(title, content, onConfirm) {
+    // First check if the modal exists, if not, create it
+    if (!document.getElementById('confirmationModal')) {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal fade';
+        modalDiv.id = 'confirmationModal';
+        modalDiv.tabIndex = '-1';
+        modalDiv.setAttribute('aria-hidden', 'true');
+        
+        modalDiv.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmationModalTitle">Confirmation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="confirmationModalBody">
+                        <!-- Confirmation content will be placed here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmBtn">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modalDiv);
+    }
+    
+    const modalTitle = document.getElementById('confirmationModalTitle');
+    const modalBody = document.getElementById('confirmationModalBody');
+    
+    modalTitle.textContent = title;
+    modalBody.innerHTML = content;
+    
+    const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    confirmationModal.show();
+    
+    document.getElementById('confirmBtn').addEventListener('click', () => {
+        confirmationModal.hide();
+        onConfirm();
+    });
 }
 
 // Initialize page
