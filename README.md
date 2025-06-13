@@ -6,6 +6,9 @@ Progettazione e Produzione Multimediale - Multimedia Design and Production 2024/
 
 # Polling application API
 
+![Built with Flask](https://img.shields.io/badge/Built%20with-Flask-000000?logo=flask)
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)
+
 A RESTful API for creating and managing polls. Users can register, create polls with multiple options, vote on polls, and view poll results.
 
 ## Setup
