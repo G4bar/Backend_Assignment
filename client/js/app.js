@@ -200,41 +200,6 @@ function displayPolls(polls, currentEndpoint = '/polls/') {
             window.location.href = `poll-details.html?poll_id=${pollId}`;
         });
     });
-    
-    // Add event listeners to delete buttons
-    document.querySelectorAll('.delete-poll').forEach(button => {
-        button.addEventListener('click', async (e) => {
-            e.stopPropagation(); // Prevent navigating to poll details
-            
-            const pollId = button.dataset.pollId;
-            const isAdminDelete = button.dataset.isAdmin === "true";
-            const confirmMessage = isAdminDelete ? 
-                'Are you sure you want to delete this poll? You are doing this as an ADMIN.' : 
-                'Are you sure you want to delete this poll?';
-                
-            if (confirm(confirmMessage)) {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/polls/delete/${pollId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(data.msg || 'Failed to delete poll');
-                    }
-                    
-                    alert('Poll deleted successfully');
-                    fetchPolls(getCurrentPollsEndpoint());
-                } catch (error) {
-                    alert(`Error: ${error.message}`);
-                }
-            }
-        });
-    });
 }
 
 // Auth event listeners
@@ -287,17 +252,24 @@ authForm.addEventListener('submit', async (e) => {
             authModal.hide();
             checkAuth();
             fetchPolls();
+            
+            showMessage('Welcome', `<i class="bi bi-check-circle text-success"></i> You are now logged in as <strong>${username}</strong>`, 'success');
         } else {
-            authError.textContent = 'Registration successful! You can now login.';
-            setTimeout(() => {
-                authModalTitle.textContent = 'Login';
-                authSubmitBtn.textContent = 'Login';
-                authForm.reset();
-                authError.textContent = '';
-            }, 1500);
+            authModal.hide();
+            
+            showMessage('Registration Successful', 
+                `<i class="bi bi-check-circle text-success"></i> Your account has been created.<br><br>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> You can now log in with your credentials.
+                </div>`, 
+                'success');
         }
     } catch (error) {
-        authError.textContent = error.message;
+        authError.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-circle"></i> ${error.message}
+            </div>
+        `;
     }
 });
 
@@ -417,9 +389,50 @@ if (createPollBtn) {
             }
             
             createPollModal.hide();
+            
+            // Generate share URL for the new poll
+            const pollUrl = `${window.location.origin}/poll-details.html?poll_id=${data.id}`;
+            
+            // Show success modal with share link
+            const modalContent = `
+                <div class="alert alert-success mb-3">
+                    <i class="bi bi-check-circle"></i> Your poll has been created successfully.
+                </div>
+                <p><strong>Share this poll:</strong></p>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" value="${pollUrl}" id="new-poll-link-input" readonly>
+                    <button class="btn btn-outline-primary" type="button" id="new-poll-copy-btn">
+                        <i class="bi bi-clipboard"></i> Copy Link
+                    </button>
+                </div>
+                <div id="new-poll-copy-confirmation" class="text-success d-none">
+                    <i class="bi bi-check-circle"></i> Link copied to clipboard!
+                </div>
+            `;
+            
+            const successModal = showMessage('Poll Created', modalContent, 'success');
+            
+            // Add copy functionality
+            document.getElementById('new-poll-copy-btn').addEventListener('click', () => {
+                const linkInput = document.getElementById('new-poll-link-input');
+                linkInput.select();
+                document.execCommand('copy');
+                
+                const copyConfirmation = document.getElementById('new-poll-copy-confirmation');
+                copyConfirmation.classList.remove('d-none');
+                
+                setTimeout(() => {
+                    copyConfirmation.classList.add('d-none');
+                }, 3000);
+            });
+            
             fetchPolls();
         } catch (error) {
-            document.getElementById('create-poll-error').textContent = error.message;
+            document.getElementById('create-poll-error').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-circle"></i> ${error.message}
+                </div>
+            `;
         }
     });
 }
@@ -429,4 +442,257 @@ if (createPollBtn) {
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     fetchPolls();
+    
+    // Add message modal to the document
+    addMessageModalToDOM();
+});
+
+// Create and add message modal to the DOM
+function addMessageModalToDOM() {
+    const modalDiv = document.createElement('div');
+    modalDiv.className = 'modal fade';
+    modalDiv.id = 'messageModal';
+    modalDiv.tabIndex = '-1';
+    modalDiv.setAttribute('aria-hidden', 'true');
+    
+    modalDiv.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="messageModalTitle">Message</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="messageModalBody">
+                    <!-- Message content will be placed here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modalDiv);
+}
+
+// Show message modal with custom content
+function showMessage(title, content, type = 'info') {
+    const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+    const modalTitle = document.getElementById('messageModalTitle');
+    const modalBody = document.getElementById('messageModalBody');
+    
+    modalTitle.textContent = title;
+    
+    // Add color indication based on message type
+    modalTitle.className = '';
+    if (type === 'success') modalTitle.classList.add('text-success');
+    if (type === 'error') modalTitle.classList.add('text-danger');
+    if (type === 'warning') modalTitle.classList.add('text-warning');
+    
+    modalBody.innerHTML = content;
+    
+    messageModal.show();
+    
+    return messageModal;
+}
+
+// Show confirmation dialog with custom action on confirm
+function showConfirmation(title, content, onConfirm) {
+    const modalDiv = document.createElement('div');
+    modalDiv.className = 'modal fade';
+    modalDiv.id = 'confirmationModal';
+    modalDiv.tabIndex = '-1';
+    modalDiv.setAttribute('aria-hidden', 'true');
+    
+    modalDiv.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">${title}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">${content}</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove any existing confirmation modal
+    const existingModal = document.getElementById('confirmationModal');
+    if (existingModal) existingModal.remove();
+    
+    document.body.appendChild(modalDiv);
+    
+    const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    confirmationModal.show();
+    
+    document.getElementById('confirmBtn').addEventListener('click', () => {
+        confirmationModal.hide();
+        onConfirm();
+    });
+}
+
+// Update delete poll button to use confirmation modal
+document.addEventListener('click', async (e) => {
+    if (e.target && e.target.closest('.delete-poll')) {
+        e.stopPropagation(); // Prevent navigating to poll details
+        const button = e.target.closest('.delete-poll');
+        const pollId = button.dataset.pollId;
+        const isAdminDelete = button.dataset.isAdmin === "true";
+        
+        const confirmTitle = isAdminDelete ? 'Admin Delete Poll' : 'Delete Poll';
+        const confirmContent = isAdminDelete ? 
+            '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> You are deleting this poll as an <strong>ADMIN</strong>.</div><p>Are you sure you want to delete this poll?</p>' : 
+            '<p>Are you sure you want to delete this poll?</p>';
+        
+        showConfirmation(confirmTitle, confirmContent, async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/polls/delete/${pollId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.msg || 'Failed to delete poll');
+                }
+                
+                showMessage('Success', '<i class="bi bi-check-circle text-success"></i> Poll deleted successfully', 'success');
+                fetchPolls(getCurrentPollsEndpoint());
+            } catch (error) {
+                showMessage('Error', `<i class="bi bi-x-circle text-danger"></i> ${error.message}`, 'error');
+            }
+        });
+    }
+});
+
+// Replace poll creation alert with modal
+createPollForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const title = document.getElementById('poll-title').value;
+    const description = document.getElementById('poll-description').value;
+    const optionInputs = document.querySelectorAll('.poll-option');
+    const options = Array.from(optionInputs).map(input => input.value);
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/polls/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ title, description, options })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.msg || 'Failed to create poll');
+        }
+        
+        createPollModal.hide();
+        
+        // Generate share URL for the new poll
+        const pollUrl = `${window.location.origin}/poll-details.html?poll_id=${data.id}`;
+        
+        // Show success modal with share link
+        const modalContent = `
+            <div class="alert alert-success mb-3">
+                <i class="bi bi-check-circle"></i> Your poll has been created successfully.
+            </div>
+            <p><strong>Share this poll:</strong></p>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" value="${pollUrl}" id="new-poll-link-input" readonly>
+                <button class="btn btn-outline-primary" type="button" id="new-poll-copy-btn">
+                    <i class="bi bi-clipboard"></i> Copy Link
+                </button>
+            </div>
+            <div id="new-poll-copy-confirmation" class="text-success d-none">
+                <i class="bi bi-check-circle"></i> Link copied to clipboard!
+            </div>
+        `;
+        
+        const successModal = showMessage('Poll Created', modalContent, 'success');
+        
+        // Add copy functionality
+        document.getElementById('new-poll-copy-btn').addEventListener('click', () => {
+            const linkInput = document.getElementById('new-poll-link-input');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            const copyConfirmation = document.getElementById('new-poll-copy-confirmation');
+            copyConfirmation.classList.remove('d-none');
+            
+            setTimeout(() => {
+                copyConfirmation.classList.add('d-none');
+            }, 3000);
+        });
+        
+        fetchPolls();
+    } catch (error) {
+        document.getElementById('create-poll-error').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-circle"></i> ${error.message}
+            </div>
+        `;
+    }
+});
+
+// Update auth error display
+authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = document.getElementById('auth-username').value;
+    const password = document.getElementById('auth-password').value;
+    const isLogin = authModalTitle.textContent === 'Login';
+    
+    const endpoint = isLogin ? '/auth/login' : '/auth/register';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.msg || 'Authentication failed');
+        }
+        
+        if (isLogin) {
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('username', username);
+            authModal.hide();
+            checkAuth();
+            fetchPolls();
+            
+            showMessage('Welcome', `<i class="bi bi-check-circle text-success"></i> You are now logged in as <strong>${username}</strong>`, 'success');
+        } else {
+            authModal.hide();
+            
+            showMessage('Registration Successful', 
+                `<i class="bi bi-check-circle text-success"></i> Your account has been created.<br><br>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> You can now log in with your credentials.
+                </div>`, 
+                'success');
+        }
+    } catch (error) {
+        authError.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-circle"></i> ${error.message}
+            </div>
+        `;
+    }
 });
