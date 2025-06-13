@@ -18,7 +18,7 @@ A RESTful API for creating and managing polls. Users can register, create polls 
 3. Configure environment variables:
    - Copy `.env.example` to `.env`: `cp .env.example .env`
    - Edit `.env` with your secure settings
-   - For production, generate strong secret keys (see below)
+   - For production, generate strong secret keys!
 4. Run the application: `python run.py`
 
 The API will be available at `http://localhost:5000/`
