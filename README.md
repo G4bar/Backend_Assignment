@@ -177,12 +177,14 @@ The API will be available at `http://localhost:5000/`
       {
         "id": 1,
         "title": "Favorite Programming Language",
-        "description": "Which programming language do you prefer?"
+        "description": "Which programming language do you prefer?",
+        "user_id": 1
       },
       {
         "id": 2,
         "title": "Best Web Framework",
-        "description": "What's your preferred web framework?"
+        "description": "What's your preferred web framework?",
+        "user_id": 2
       }
     ],
     "count": 2
@@ -202,7 +204,8 @@ The API will be available at `http://localhost:5000/`
       {
         "id": 1,
         "title": "Favorite Programming Language",
-        "description": "Which programming language do you prefer?"
+        "description": "Which programming language do you prefer?",
+        "user_id": 1
       }
     ],
     "count": 1

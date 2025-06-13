@@ -133,7 +133,8 @@ def get_all_polls():
         polls_list.append({
             'id': poll.id,
             'title': poll.title,
-            'description': poll.description
+            'description': poll.description,
+            'user_id': poll.user_id
         })
     
     return jsonify({
@@ -184,7 +185,8 @@ def get_my_polls():
         polls_list.append({
             'id': poll.id,
             'title': poll.title,
-            'description': poll.description
+            'description': poll.description,
+            'user_id': poll.user_id
         })
     
     return jsonify({
