@@ -4,8 +4,12 @@ Progettazione e Produzione Multimediale - Multimedia Design and Production 2024/
 **Autore**: Gabriele Berti  
 **Matricola**: 7073786
 
-**API URL:**: https://polls-api-production.up.railway.app
-**CLIENT URL:**: https://polling-app-production-3be4.up.railway.app/index.html
+## 🚀 Deployment
+
+| Service | URL | Status |
+|---------|-----|--------|
+| **API Server** | [https://polls-api-production.up.railway.app](https://polls-api-production.up.railway.app) | ![Live](https://img.shields.io/badge/status-live-success) |
+| **Client Application** | [https://polling-app-production-3be4.up.railway.app](https://polling-app-production-3be4.up.railway.app/index.html) | ![Live](https://img.shields.io/badge/status-live-success) |
 
 ## Client Application
 The client is a completely static web application built with HTML, CSS, and JavaScript. It is hosted separately from the backend and communicates with the Flask API exclusively through RESTful endpoints. The client handles user authentication, poll creation, voting, and result visualization entirely on the frontend, making API calls as needed to persist and retrieve data.
@@ -14,6 +18,7 @@ The client is a completely static web application built with HTML, CSS, and Java
 
 ![Built with Flask](https://img.shields.io/badge/Built%20with-Flask-000000?logo=flask)
 ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)
+![Environment](https://img.shields.io/badge/environment-production-brightgreen)
 
 A RESTful API for creating and managing polls. Users can register, create polls with multiple options, vote on polls, and view poll results.
 
