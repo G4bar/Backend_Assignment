@@ -3,7 +3,7 @@ from flask_jwt_extended import create_access_token
 
 from .. import db, bcrypt
 from ..models import User
-from ...config import Config
+from config import Config
 
 auth_bp = Blueprint("auth", __name__)
 
