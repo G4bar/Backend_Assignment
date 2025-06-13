@@ -1,10 +1,10 @@
-# Polling application API
-
-## Backend Assignment
+# Backend Assignment
 Progettazione e Produzione Multimediale - Multimedia Design and Production 2024/2025
 
 **Autore**: Gabriele Berti  
 **Matricola**: 7073786
+
+# Polling application API
 
 A RESTful API for creating and managing polls. Users can register, create polls with multiple options, vote on polls, and view poll results.
 
