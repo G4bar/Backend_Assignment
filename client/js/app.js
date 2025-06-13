@@ -44,22 +44,79 @@ function getCurrentPollsEndpoint() {
     return '/polls/';
 }
 
-// Fetch all polls
+// Check if token is expired
+function isTokenExpired(token) {
+    if (!token) return true;
+    
+    try {
+        const payload = token.split('.')[1];
+        if (!payload) return true;
+        
+        // Decode the payload
+        const decoded = JSON.parse(atob(payload));
+        
+        // Check if token has expiration claim
+        if (!decoded.exp) return false;
+        
+        // Compare expiration time with current time
+        const currentTime = Math.floor(Date.now() / 1000);
+        return decoded.exp < currentTime;
+    } catch (error) {
+        console.error('Error checking token expiration:', error);
+        return true; // Assume expired if there's an error
+    }
+}
+
+// Handle session timeout
+function handleSessionTimeout() {
+    // Clear authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    
+    // Update UI
+    checkAuth();
+    
+    // Show session timeout message
+    showMessage('Session Timeout', 
+        `<div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> Your session has expired. Please log in again.
+        </div>`, 
+        'warning');
+    
+    // Optionally auto-open login after a delay
+    setTimeout(() => {
+        document.getElementById('messageModal').addEventListener('hidden.bs.modal', () => {
+            document.getElementById('login-btn').click();
+        }, { once: true });
+    }, 2000);
+}
+
+// Fetch all polls - modified to handle token expiration
 async function fetchPolls(endpoint = '/polls/') {
     try {
         pollsContainer.innerHTML = '<div class="text-center w-100"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
         
         const headers = {};
+        const token = localStorage.getItem('token');
         
-        // Always add authorization header if user is logged in
-        // This enables identifying the user's polls in the main list
-        if (localStorage.getItem('token')) {
-            headers['Authorization'] = `Bearer ${localStorage.getItem('token')}`;
+        // Check token expiration before making the request
+        if (token) {
+            if (isTokenExpired(token)) {
+                handleSessionTimeout();
+                return;
+            }
+            headers['Authorization'] = `Bearer ${token}`;
         }
         
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             headers: headers
         });
+        
+        if (response.status === 401) {
+            // 401 Unauthorized - session likely expired
+            handleSessionTimeout();
+            return;
+        }
         
         if (!response.ok) {
             throw new Error('Failed to fetch polls');

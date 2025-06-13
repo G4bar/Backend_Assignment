@@ -122,10 +122,69 @@ function checkAuth() {
     return isAuthenticated;
 }
 
-// Fetch poll details
+// Check if token is expired
+function isTokenExpired(token) {
+    if (!token) return true;
+    
+    try {
+        const payload = token.split('.')[1];
+        if (!payload) return true;
+        
+        // Decode the payload
+        const decoded = JSON.parse(atob(payload));
+        
+        // Check if token has expiration claim
+        if (!decoded.exp) return false;
+        
+        // Compare expiration time with current time
+        const currentTime = Math.floor(Date.now() / 1000);
+        return decoded.exp < currentTime;
+    } catch (error) {
+        console.error('Error checking token expiration:', error);
+        return true; // Assume expired if there's an error
+    }
+}
+
+// Handle session timeout
+function handleSessionTimeout() {
+    // Clear authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    
+    // Update UI
+    checkAuth();
+    
+    // Show session timeout message
+    showMessage('Session Timeout', 
+        `<div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> Your session has expired. Please log in again.
+        </div>`, 
+        'warning');
+    
+    // Optionally auto-open login after a delay
+    setTimeout(() => {
+        document.getElementById('messageModal').addEventListener('hidden.bs.modal', () => {
+            document.getElementById('login-btn').click();
+        }, { once: true });
+    }, 2000);
+}
+
+// Fetch poll details - modified to handle token expiration
 async function fetchPollDetails() {
     try {
+        const token = localStorage.getItem('token');
+        if (token && isTokenExpired(token)) {
+            handleSessionTimeout();
+            return;
+        }
+        
         const response = await fetch(`${API_BASE_URL}/polls/get/${pollId}`);
+        
+        if (response.status === 401) {
+            // 401 Unauthorized - session likely expired
+            handleSessionTimeout();
+            return;
+        }
         
         if (!response.ok) {
             throw new Error('Poll not found');
@@ -176,7 +235,8 @@ function displayPollDetails(poll) {
     // Add click event for voting
     document.querySelectorAll('.poll-option').forEach(option => {
         option.addEventListener('click', async () => {
-            if (!localStorage.getItem('token')) {
+            const token = localStorage.getItem('token');
+            if (!token) {
                 showMessage('Login Required', 
                     `<i class="bi bi-exclamation-circle text-warning"></i> 
                     You need to be logged in to vote on this poll.
@@ -194,6 +254,12 @@ function displayPollDetails(poll) {
                 return;
             }
             
+            // Check if token is expired
+            if (isTokenExpired(token)) {
+                handleSessionTimeout();
+                return;
+            }
+            
             if (userVoted) {
                 showMessage('Already Voted', 
                     `<i class="bi bi-info-circle text-info"></i> 
@@ -208,10 +274,16 @@ function displayPollDetails(poll) {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ poll_id: pollId, option_id: optionId })
                 });
+                
+                // Handle session timeout
+                if (response.status === 401) {
+                    handleSessionTimeout();
+                    return;
+                }
                 
                 const data = await response.json();
                 
@@ -300,6 +372,14 @@ function displayResults(poll) {
 // Delete poll functionality
 if (deletePollBtn) {
     deletePollBtn.addEventListener('click', async () => {
+        const token = localStorage.getItem('token');
+        
+        // Check if token is expired
+        if (token && isTokenExpired(token)) {
+            handleSessionTimeout();
+            return;
+        }
+        
         const isAdmin = isUserAdmin();
         
         const confirmTitle = isAdmin ? 'Admin Delete Poll' : 'Delete Poll';
@@ -315,9 +395,15 @@ if (deletePollBtn) {
                 const response = await fetch(`${API_BASE_URL}/polls/delete/${pollId}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
+                
+                // Check for expired token
+                if (response.status === 401) {
+                    handleSessionTimeout();
+                    return;
+                }
                 
                 const data = await response.json();
                 
