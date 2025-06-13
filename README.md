@@ -26,7 +26,7 @@ The application will automatically deploy when you push changes to your reposito
 
 ## Local Development
 
-To run the application locally, please checkout the **DEV** branch which contains the necessary configuration for local development:
+To run the application locally, please checkout the **DEV** branch which contains the necessary configuration for local development
 
 ## API Documentation
 
