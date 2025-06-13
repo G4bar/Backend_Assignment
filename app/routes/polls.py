@@ -150,13 +150,18 @@ def delete_poll(poll_id):
     if isinstance(user_id, str):
         user_id = int(user_id)
     
+    # Get the user to check if admin
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+    
     # Check if poll exists
     poll = Poll.query.get(poll_id)
     if not poll:
         return jsonify({"msg": "Poll not found"}), 404
     
-    # Check if authenticated user is the poll owner
-    if poll.user_id != user_id:
+    # Check if authenticated user is the poll owner or an admin
+    if poll.user_id != user_id and not user.is_admin:
         return jsonify({"msg": "You don't have permission to delete this poll"}), 403
     
     # Delete poll (cascade will handle related options and votes)

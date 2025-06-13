@@ -6,6 +6,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
+    is_admin = db.Column(db.Boolean, default=False)
     
     # Relationship with polls created by the user
     polls = db.relationship('Poll', backref='creator', lazy=True, cascade='all, delete-orphan')

@@ -227,6 +227,36 @@ The API will be available at `http://localhost:5000/`
   - `403 Forbidden` if user is not the poll creator
   - `404 Not Found` if poll doesn't exist
 
+### Admin Endpoints
+
+#### Create an admin user
+
+- **URL**: `/auth/create-admin`
+- **Method**: `POST`
+- **Auth required**: No (but requires admin secret)
+- **Request body**:
+  ```json
+  {
+    "username": "admin_user",
+    "password": "secure_password",
+    "admin_secret": "YOUR_ADMIN_SECRET_HERE"
+  }
+  ```
+- **Success Response**: `201 Created`
+  ```json
+  {
+    "msg": "Admin user created"
+  }
+  ```
+- **Error Response**: 
+  - `403 Forbidden` if admin secret is incorrect
+  - `409 Conflict` if username already exists
+
+## Admin Privileges
+
+Admin users have the following privileges:
+- Can delete polls created by any user
+
 ## Authentication
 
 Most endpoints require authentication. To authenticate:
