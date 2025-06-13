@@ -1,0 +1,432 @@
+// Main JavaScript file for the Polling Application
+
+// API base URL
+const API_BASE_URL = 'http://polls-api-production.up.railway.app';
+
+// DOM Elements
+const pollsContainer = document.getElementById('polls-container');
+const loginBtn = document.getElementById('login-btn');
+const registerBtn = document.getElementById('register-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const authModal = new bootstrap.Modal(document.getElementById('authModal'));
+const authForm = document.getElementById('auth-form');
+const authError = document.getElementById('auth-error');
+const authModalTitle = document.getElementById('authModalTitle');
+const authSubmitBtn = document.getElementById('auth-submit-btn');
+const userControls = document.getElementById('user-controls');
+const usernameSpan = document.getElementById('username');
+const createPollBtn = document.getElementById('create-poll-btn');
+const myPollsBtn = document.getElementById('my-polls-btn');
+const appLogo = document.getElementById('app-logo');
+const pollsHeading = document.getElementById('polls-heading'); // Add reference to the heading element
+
+// Check if user is logged in
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    if (token) {
+        document.getElementById('auth-nav').classList.add('d-none');
+        userControls.classList.remove('d-none');
+        usernameSpan.textContent = localStorage.getItem('username');
+        return true;
+    } else {
+        document.getElementById('auth-nav').classList.remove('d-none');
+        userControls.classList.add('d-none');
+        return false;
+    }
+}
+
+// Function to get current polls endpoint
+function getCurrentPollsEndpoint() {
+    // Check if we're viewing "My Polls"
+    if (myPollsBtn && myPollsBtn.classList.contains('btn-primary')) {
+        return '/polls/my-polls';
+    }
+    return '/polls/';
+}
+
+// Fetch all polls
+async function fetchPolls(endpoint = '/polls/') {
+    try {
+        pollsContainer.innerHTML = '<div class="text-center w-100"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        
+        const headers = {};
+        
+        // Always add authorization header if user is logged in
+        // This enables identifying the user's polls in the main list
+        if (localStorage.getItem('token')) {
+            headers['Authorization'] = `Bearer ${localStorage.getItem('token')}`;
+        }
+        
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            headers: headers
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch polls');
+        }
+        
+        const data = await response.json();
+        
+        // Debug poll data structure
+        if (data.polls && data.polls.length > 0) {
+            console.log('Sample poll structure:', JSON.stringify(data.polls[0]));
+        }
+        
+        displayPolls(data.polls, endpoint);
+    } catch (error) {
+        console.error('Error fetching polls:', error);
+        pollsContainer.innerHTML = `<div class="alert alert-danger w-100">Error loading polls: ${error.message}</div>`;
+    }
+}
+
+// Helper function to get user ID from token - improved for better token handling
+function getUserIdFromToken(token) {
+    try {
+        if (!token) return null;
+        
+        const payload = token.split('.')[1];
+        if (!payload) return null;
+        
+        // Base64 decode and parse
+        const decoded = JSON.parse(atob(payload));
+        console.log('Decoded JWT token:', decoded); // Debug JWT content
+        
+        // JWT can store user ID in different fields, check common patterns
+        return decoded.sub || decoded.id || decoded.user_id;
+    } catch (error) {
+        console.error('Error decoding token:', error);
+        return null;
+    }
+}
+
+// Helper function to get user role from token
+function getUserRoleFromToken(token) {
+    try {
+        if (!token) return null;
+        
+        const payload = token.split('.')[1];
+        if (!payload) return null;
+        
+        // Base64 decode and parse
+        const decoded = JSON.parse(atob(payload));
+        console.log('Decoded JWT token:', decoded); // Debug JWT content
+        
+        // Check for admin role/flag in token
+        return decoded.is_admin === true ? 'admin' : 'user';
+    } catch (error) {
+        console.error('Error decoding token role:', error);
+        return null;
+    }
+}
+
+// Check if current user is admin
+function isUserAdmin() {
+    const token = localStorage.getItem('token');
+    return getUserRoleFromToken(token) === 'admin';
+}
+
+// Display polls in the container
+function displayPolls(polls, currentEndpoint = '/polls/') {
+    if (!polls || polls.length === 0) {
+        pollsContainer.innerHTML = '<p class="text-center w-100">No polls available.</p>';
+        return;
+    }
+
+    pollsContainer.innerHTML = '';
+    
+    // Get user ID if logged in
+    const token = localStorage.getItem('token');
+    const currentUserId = token ? getUserIdFromToken(token) : null;
+    const isAdmin = isUserAdmin();
+    
+    console.log('Display polls - Current user ID:', currentUserId, 'Is admin:', isAdmin);
+    
+    polls.forEach(poll => {
+        console.log(`Poll ID: ${poll.id}, Creator ID: ${poll.user_id}`);
+        
+        // Show badge ONLY on main page for user's polls
+        const isUsersPoll = currentEndpoint === '/polls/' && 
+                           currentUserId && 
+                           poll.user_id && 
+                           String(poll.user_id) === String(currentUserId);
+                           
+        // Show delete button if user owns this poll OR user is admin
+        const showDeleteButton = (currentUserId && 
+                                 ((poll.user_id && String(poll.user_id) === String(currentUserId)) || isAdmin)) || 
+                                 currentEndpoint === '/polls/my-polls';
+        
+        // Determine if this is an admin delete operation (admin deleting someone else's poll)
+        const isAdminDelete = isAdmin && currentUserId && poll.user_id && 
+                             String(poll.user_id) !== String(currentUserId);
+        
+        const pollCard = document.createElement('div');
+        pollCard.className = 'col';
+        pollCard.innerHTML = `
+            <div class="card h-100 poll-card" data-poll-id="${poll.id}">
+                <div class="card-body">
+                    <h5 class="card-title">${poll.title}</h5>
+                    <p class="card-text">${poll.description}</p>
+                    <div class="mt-3 text-muted small">
+                        <div><i class="bi bi-person-circle me-1"></i> Created by: ${poll.creator_name || 'Unknown user'}</div>
+                    </div>
+                    ${isUsersPoll ? '<span class="badge bg-primary position-absolute top-0 end-0 m-2">Your Poll</span>' : ''}
+                    ${isAdmin ? '<span class="badge bg-danger position-absolute top-0 end-0 m-2">Admin</span>' : ''}
+                </div>
+                ${showDeleteButton ? `
+                <div class="card-footer">
+                    <div class="d-flex gap-2">
+                        <button class="btn ${isAdminDelete ? 'btn-danger' : 'btn-danger'} btn-sm delete-poll flex-grow-1" 
+                                data-poll-id="${poll.id}" 
+                                data-is-admin="${isAdminDelete}">
+                            Delete${isAdminDelete ? ' <span class="badge bg-warning admin-badge">ADMIN</span>' : ''}
+                        </button>
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+        pollsContainer.appendChild(pollCard);
+    });
+    
+    // Make entire poll card clickable
+    document.querySelectorAll('.poll-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Don't navigate if they clicked the delete button
+            if (e.target.closest('.delete-poll')) {
+                return;
+            }
+            
+            const pollId = card.dataset.pollId;
+            window.location.href = `poll-details.html?poll_id=${pollId}`;
+        });
+    });
+    
+    // Add event listeners to delete buttons
+    document.querySelectorAll('.delete-poll').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            e.stopPropagation(); // Prevent navigating to poll details
+            
+            const pollId = button.dataset.pollId;
+            const isAdminDelete = button.dataset.isAdmin === "true";
+            const confirmMessage = isAdminDelete ? 
+                'Are you sure you want to delete this poll? You are doing this as an ADMIN.' : 
+                'Are you sure you want to delete this poll?';
+                
+            if (confirm(confirmMessage)) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/polls/delete/${pollId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.msg || 'Failed to delete poll');
+                    }
+                    
+                    alert('Poll deleted successfully');
+                    fetchPolls(getCurrentPollsEndpoint());
+                } catch (error) {
+                    alert(`Error: ${error.message}`);
+                }
+            }
+        });
+    });
+}
+
+// Auth event listeners
+loginBtn.addEventListener('click', () => {
+    authModalTitle.textContent = 'Login';
+    authSubmitBtn.textContent = 'Login';
+    authForm.reset();
+    authError.textContent = '';
+    authModal.show();
+    document.getElementById('auth-username').focus();
+});
+
+registerBtn.addEventListener('click', () => {
+    authModalTitle.textContent = 'Register';
+    authSubmitBtn.textContent = 'Register';
+    authForm.reset();
+    authError.textContent = '';
+    authModal.show();
+    document.getElementById('auth-username').focus();
+});
+
+// Handle authentication form submission
+authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = document.getElementById('auth-username').value;
+    const password = document.getElementById('auth-password').value;
+    const isLogin = authModalTitle.textContent === 'Login';
+    
+    const endpoint = isLogin ? '/auth/login' : '/auth/register';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.msg || 'Authentication failed');
+        }
+        
+        if (isLogin) {
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('username', username);
+            authModal.hide();
+            checkAuth();
+            fetchPolls();
+        } else {
+            authError.textContent = 'Registration successful! You can now login.';
+            setTimeout(() => {
+                authModalTitle.textContent = 'Login';
+                authSubmitBtn.textContent = 'Login';
+                authForm.reset();
+                authError.textContent = '';
+            }, 1500);
+        }
+    } catch (error) {
+        authError.textContent = error.message;
+    }
+});
+
+// Logout functionality
+logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    checkAuth();
+    fetchPolls();
+});
+
+// App logo click - fetch all polls
+if (appLogo) {
+    appLogo.addEventListener('click', (e) => {
+        if (window.location.pathname.includes('index.html') || 
+            window.location.pathname === '/' || 
+            window.location.pathname.endsWith('/')) {
+            e.preventDefault();
+            
+            // Reset my polls button state
+            if (myPollsBtn) {
+                myPollsBtn.classList.add('btn-outline-secondary');
+                myPollsBtn.classList.remove('btn-primary');
+            }
+            
+            // Update heading to "All Polls"
+            if (pollsHeading) {
+                pollsHeading.textContent = 'All Polls';
+            }
+            
+            // Fetch all polls
+            fetchPolls('/polls/');
+        }
+    });
+}
+
+// My Polls button
+if (myPollsBtn) {
+    myPollsBtn.addEventListener('click', () => {
+        // Set button state
+        myPollsBtn.classList.add('btn-primary');
+        myPollsBtn.classList.remove('btn-outline-secondary');
+        
+        // Update heading to "My Polls"
+        if (pollsHeading) {
+            pollsHeading.textContent = 'My Polls';
+        }
+        
+        // Fetch user's polls
+        fetchPolls('/polls/my-polls');
+    });
+}
+
+// Create poll modal and functionality
+if (createPollBtn) {
+    const createPollModal = new bootstrap.Modal(document.getElementById('createPollModal'));
+    const createPollForm = document.getElementById('create-poll-form');
+    const addOptionBtn = document.getElementById('add-option-btn');
+    
+    createPollBtn.addEventListener('click', () => {
+        createPollForm.reset();
+        document.getElementById('options-container').innerHTML = `
+            <div class="input-group mb-2">
+                <input type="text" class="form-control poll-option" required>
+                <button type="button" class="btn btn-outline-danger remove-option">Remove</button>
+            </div>
+            <div class="input-group mb-2">
+                <input type="text" class="form-control poll-option" required>
+                <button type="button" class="btn btn-outline-danger remove-option">Remove</button>
+            </div>
+        `;
+        createPollModal.show();
+    });
+    
+    addOptionBtn.addEventListener('click', () => {
+        const optionsContainer = document.getElementById('options-container');
+        const newOption = document.createElement('div');
+        newOption.className = 'input-group mb-2';
+        newOption.innerHTML = `
+            <input type="text" class="form-control poll-option" required>
+            <button type="button" class="btn btn-outline-danger remove-option">Remove</button>
+        `;
+        optionsContainer.appendChild(newOption);
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.classList.contains('remove-option')) {
+            const optionsContainer = document.getElementById('options-container');
+            if (optionsContainer.children.length > 2) {
+                e.target.parentElement.remove();
+            }
+        }
+    });
+    
+    createPollForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const title = document.getElementById('poll-title').value;
+        const description = document.getElementById('poll-description').value;
+        const optionInputs = document.querySelectorAll('.poll-option');
+        const options = Array.from(optionInputs).map(input => input.value);
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/polls/create`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ title, description, options })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.msg || 'Failed to create poll');
+            }
+            
+            createPollModal.hide();
+            fetchPolls();
+        } catch (error) {
+            document.getElementById('create-poll-error').textContent = error.message;
+        }
+    });
+}
+
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+    fetchPolls();
+});

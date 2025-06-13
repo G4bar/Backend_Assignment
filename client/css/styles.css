@@ -1,0 +1,205 @@
+/* Custom styles for Polling Application */
+
+/* Base styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+    font-family: 'Comic Neue', cursive;
+}
+
+main {
+    flex: 1;
+}
+
+/* Ensure all elements use the Comic Neue font */
+h1, h2, h3, h4, h5, h6, 
+p, span, div, button, 
+input, textarea, select, option, 
+label, a, li, td, th {
+    font-family: 'Comic Neue', cursive !important;
+}
+
+/* Poll cards - enhance clickable appearance */
+.poll-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    cursor: pointer;
+    position: relative;
+}
+
+.poll-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.poll-card .btn {
+    position: relative;
+    z-index: 2; /* Ensure buttons remain clickable */
+}
+
+/* Highlight effect when hovering over cards */
+.poll-card:hover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(13, 110, 253, 0.05);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* Poll options on details page */
+.poll-option {
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.poll-option:hover {
+    background-color: #f0f0f0;
+}
+
+.poll-option.selected {
+    background-color: #d1e7ff;
+    border-color: #0d6efd;
+}
+
+/* Results visualization */
+.results-bar {
+    height: 30px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    transition: width 1s ease-in-out;
+}
+
+/* Authenticated user elements */
+.user-poll-actions {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.poll-card:hover .user-poll-actions {
+    opacity: 1;
+}
+
+/* Design for the vote count badges */
+.vote-count {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(13, 110, 253, 0.8);
+    color: white;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Results chart container */
+#chart-container {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Admin-specific styles */
+.admin-delete {
+    position: relative;
+}
+
+.admin-badge {
+    font-size: 0.75rem;
+    vertical-align: middle;
+}
+
+/* Highlight admin delete buttons */
+.delete-poll[data-is-admin="true"] {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    position: relative;
+}
+
+.delete-poll[data-is-admin="true"]:hover {
+    background-color: #bb2d3b;
+    border-color: #b02a37;
+}
+
+/* Remove option button styles */
+.input-group .remove-option {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    white-space: nowrap;
+}
+
+/* Ensure input group components align properly */
+.input-group {
+    flex-wrap: nowrap;
+}
+
+.input-group .form-control,
+.input-group .btn {
+    position: relative;
+    flex: 0 1 auto;
+    margin-bottom: 0;
+}
+
+.input-group .form-control {
+    flex: 1 1 auto;
+    width: 1%;
+}
+
+/* Fix for remove option buttons in create poll form */
+#create-poll-form .input-group {
+    align-items: stretch;
+}
+
+#create-poll-form .input-group .form-control,
+#create-poll-form .input-group .btn {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    height: 38px; /* Force consistent height */
+    line-height: 1.5;
+    box-sizing: border-box;
+}
+
+#create-poll-form .input-group .remove-option {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    width: auto;
+}
+
+/* Additional styles for the polling application */
+.option-item {
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.option-item:hover {
+    background-color: #e9ecef;
+}
+
+.option-item.selected {
+    background-color: #cfe2ff;
+    border-left: 4px solid #0d6efd;
+}
