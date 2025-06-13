@@ -390,42 +390,15 @@ if (createPollBtn) {
             
             createPollModal.hide();
             
-            // Generate share URL for the new poll
-            const pollUrl = `${window.location.origin}/poll-details.html?poll_id=${data.id}`;
-            
-            // Show success modal with share link
+            // Show simple success message without share link
             const modalContent = `
                 <div class="alert alert-success mb-3">
                     <i class="bi bi-check-circle"></i> Your poll has been created successfully.
                 </div>
-                <p><strong>Share this poll:</strong></p>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" value="${pollUrl}" id="new-poll-link-input" readonly>
-                    <button class="btn btn-outline-primary" type="button" id="new-poll-copy-btn">
-                        <i class="bi bi-clipboard"></i> Copy Link
-                    </button>
-                </div>
-                <div id="new-poll-copy-confirmation" class="text-success d-none">
-                    <i class="bi bi-check-circle"></i> Link copied to clipboard!
-                </div>
+                <p>You can view and share your poll from the <strong>My Polls</strong> section.</p>
             `;
             
-            const successModal = showMessage('Poll Created', modalContent, 'success');
-            
-            // Add copy functionality
-            document.getElementById('new-poll-copy-btn').addEventListener('click', () => {
-                const linkInput = document.getElementById('new-poll-link-input');
-                linkInput.select();
-                document.execCommand('copy');
-                
-                const copyConfirmation = document.getElementById('new-poll-copy-confirmation');
-                copyConfirmation.classList.remove('d-none');
-                
-                setTimeout(() => {
-                    copyConfirmation.classList.add('d-none');
-                }, 3000);
-            });
-            
+            showMessage('Poll Created', modalContent, 'success');
             fetchPolls();
         } catch (error) {
             document.getElementById('create-poll-error').innerHTML = `
@@ -599,45 +572,70 @@ createPollForm.addEventListener('submit', async (e) => {
         
         createPollModal.hide();
         
-        // Generate share URL for the new poll
-        const pollUrl = `${window.location.origin}/poll-details.html?poll_id=${data.id}`;
-        
-        // Show success modal with share link
+        // Show simple success message without share link
         const modalContent = `
             <div class="alert alert-success mb-3">
                 <i class="bi bi-check-circle"></i> Your poll has been created successfully.
             </div>
-            <p><strong>Share this poll:</strong></p>
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" value="${pollUrl}" id="new-poll-link-input" readonly>
-                <button class="btn btn-outline-primary" type="button" id="new-poll-copy-btn">
-                    <i class="bi bi-clipboard"></i> Copy Link
-                </button>
-            </div>
-            <div id="new-poll-copy-confirmation" class="text-success d-none">
-                <i class="bi bi-check-circle"></i> Link copied to clipboard!
-            </div>
+            <p>You can view and share your poll from the <strong>My Polls</strong> section.</p>
         `;
         
-        const successModal = showMessage('Poll Created', modalContent, 'success');
-        
-        // Add copy functionality
-        document.getElementById('new-poll-copy-btn').addEventListener('click', () => {
-            const linkInput = document.getElementById('new-poll-link-input');
-            linkInput.select();
-            document.execCommand('copy');
-            
-            const copyConfirmation = document.getElementById('new-poll-copy-confirmation');
-            copyConfirmation.classList.remove('d-none');
-            
-            setTimeout(() => {
-                copyConfirmation.classList.add('d-none');
-            }, 3000);
-        });
-        
+        showMessage('Poll Created', modalContent, 'success');
         fetchPolls();
     } catch (error) {
         document.getElementById('create-poll-error').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-circle"></i> ${error.message}
+            </div>
+        `;
+    }
+});
+
+// Update auth error display
+authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = document.getElementById('auth-username').value;
+    const password = document.getElementById('auth-password').value;
+    const isLogin = authModalTitle.textContent === 'Login';
+    
+    const endpoint = isLogin ? '/auth/login' : '/auth/register';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.msg || 'Authentication failed');
+        }
+        
+        if (isLogin) {
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('username', username);
+            authModal.hide();
+            checkAuth();
+            fetchPolls();
+            
+            showMessage('Welcome', `<i class="bi bi-check-circle text-success"></i> You are now logged in as <strong>${username}</strong>`, 'success');
+        } else {
+            authModal.hide();
+            
+            showMessage('Registration Successful', 
+                `<i class="bi bi-check-circle text-success"></i> Your account has been created.<br><br>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> You can now log in with your credentials.
+                </div>`, 
+                'success');
+        }
+    } catch (error) {
+        authError.innerHTML = `
             <div class="alert alert-danger">
                 <i class="bi bi-exclamation-circle"></i> ${error.message}
             </div>
