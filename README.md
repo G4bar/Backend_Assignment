@@ -115,6 +115,7 @@ The API will be available at `http://localhost:5000/`
     "description": "Which programming language do you prefer?",
     "created_at": "2023-09-20T15:30:45.123456",
     "creator_id": 1,
+    "creator_name": "example_user",
     "is_active": true,
     "options": [
       {
@@ -178,13 +179,15 @@ The API will be available at `http://localhost:5000/`
         "id": 1,
         "title": "Favorite Programming Language",
         "description": "Which programming language do you prefer?",
-        "user_id": 1
+        "user_id": 1,
+        "creator_name": "example_user"
       },
       {
         "id": 2,
         "title": "Best Web Framework",
         "description": "What's your preferred web framework?",
-        "user_id": 2
+        "user_id": 2,
+        "creator_name": "another_user"
       }
     ],
     "count": 2
@@ -205,7 +208,8 @@ The API will be available at `http://localhost:5000/`
         "id": 1,
         "title": "Favorite Programming Language",
         "description": "Which programming language do you prefer?",
-        "user_id": 1
+        "user_id": 1,
+        "creator_name": "example_user"
       }
     ],
     "count": 1

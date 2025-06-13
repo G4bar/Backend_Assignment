@@ -57,6 +57,10 @@ def get_poll(poll_id):
     # Get poll results with vote counts
     results = poll.get_results()
     
+    # Get creator's name
+    creator = User.query.get(poll.user_id)
+    creator_name = creator.username if creator else "Unknown User"
+    
     # Format options for the response
     options = []
     for option_id, option_data in results.items():
@@ -73,6 +77,7 @@ def get_poll(poll_id):
         'description': poll.description,
         'created_at': poll.created_at.isoformat(),
         'creator_id': poll.user_id,
+        'creator_name': creator_name,
         'is_active': poll.is_active,
         'options': options
     }
@@ -130,11 +135,16 @@ def get_all_polls():
     
     polls_list = []
     for poll in polls:
+        # Get creator's name
+        creator = User.query.get(poll.user_id)
+        creator_name = creator.username if creator else "Unknown User"
+        
         polls_list.append({
             'id': poll.id,
             'title': poll.title,
             'description': poll.description,
-            'user_id': poll.user_id
+            'user_id': poll.user_id,
+            'creator_name': creator_name
         })
     
     return jsonify({
@@ -182,6 +192,10 @@ def get_my_polls():
     if isinstance(user_id, str):
         user_id = int(user_id)
     
+    # Get the user to get the username
+    user = User.query.get(user_id)
+    creator_name = user.username if user else "Unknown User"
+    
     # Query polls created by the authenticated user
     polls = Poll.query.filter_by(user_id=user_id).all()
     
@@ -191,7 +205,8 @@ def get_my_polls():
             'id': poll.id,
             'title': poll.title,
             'description': poll.description,
-            'user_id': poll.user_id
+            'user_id': poll.user_id,
+            'creator_name': creator_name
         })
     
     return jsonify({
